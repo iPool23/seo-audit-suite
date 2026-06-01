@@ -8,6 +8,8 @@ A MCP (Model Control Protocol) SEO tool service based on Ahrefs data. Includes f
 
 This service provides an API to retrieve SEO data from Ahrefs. It handles the entire process, including solving the CAPTCHA, authentication, and data retrieval. The results are cached to improve performance and reduce API costs.
 
+For a public on-page SEO audit of a website without Ahrefs or CapSolver, use the built-in `seo_audit` tool added to this project. It crawls a small set of internal pages by default.
+
 > This MCP service is for educational purposes only. Please do not misuse it. This project is inspired by `@哥飞社群`.
 
 ## Features
@@ -31,6 +33,16 @@ This service provides an API to retrieve SEO data from Ahrefs. It handles the en
   - Analyze popular pages and country distribution
   - Track keyword rankings
 
+- 🌐 Public On-Page SEO Audit
+
+  - Crawl a few internal pages from any publicly accessible website without CapSolver
+  - Check title, meta description, headings, canonical, images, links, indexability, and page-by-page score
+
+- 🧾 SEO Report Export
+
+  - Generate shareable HTML or Markdown reports from a crawl
+  - See score distribution, common issues, worst pages, and next actions at a glance
+
 - 🚀 Performance Optimization
 
   - Use CapSolver to automatically solve CAPTCHA
@@ -41,7 +53,7 @@ This service provides an API to retrieve SEO data from Ahrefs. It handles the en
 ### Prerequisites
 
 - Python 3.10 or higher
-- CapSolver account and API key ([register here](https://dashboard.capsolver.com/passport/register?inviteCode=1dTH7WQSfHD0))
+- CapSolver account and API key only if you want to use the Ahrefs-backed tools ([register here](https://dashboard.capsolver.com/passport/register?inviteCode=1dTH7WQSfHD0))
 
 ### Install from PyPI
 
@@ -78,6 +90,8 @@ uv pip install seo-mcp
    export CAPSOLVER_API_KEY="your-capsolver-api-key"
    ```
 
+  You can skip this step if you only want to use the public SEO audit tool.
+
 ## Usage
 
 ### Run the service
@@ -103,6 +117,16 @@ In the Cursor settings, switch to the MCP tab, click the `+Add new global MCP se
 ```
 
 You can also create a `.cursor/mcp.json` file in the project root directory, with the same content.
+
+### Export a report
+
+Generate a visual HTML report or a Markdown summary from any public website:
+
+```bash
+seo-report ucv.edu.pe --format html --max-pages 4
+```
+
+By default, the command saves the report under `reports/`. Use `--output` to choose a file name, or `--format markdown` to export a Markdown version.
 
 ### API Reference
 
@@ -203,6 +227,37 @@ Get the keyword difficulty score.
   "difficulty": 45,
   "serp": [...],
   "related": [...]
+}
+```
+
+#### `seo_audit(url_or_domain: str, max_pages: int = 5, timeout: int = 20)`
+
+Run a public on-page SEO audit for a website and crawl a handful of internal pages.
+
+**Parameters:**
+
+- `url_or_domain` (string): A full URL or domain to analyze, such as `https://ucv.edu.pe` or `ucv.edu.pe`
+- `max_pages` (integer): Maximum number of internal pages to audit, default: 5
+- `timeout` (integer): Request timeout in seconds
+
+**Returns:**
+
+```json
+{
+  "start_url": "https://www.ucv.edu.pe/",
+  "max_pages": 5,
+  "pages": [
+    {
+      "final_url": "https://www.ucv.edu.pe/",
+      "score": 85,
+      "title": "UCV | Universidad César Vallejo"
+    }
+  ],
+  "aggregate": {
+    "page_count": 5,
+    "average_score": 88.8,
+    "common_issues": []
+  }
 }
 ```
 

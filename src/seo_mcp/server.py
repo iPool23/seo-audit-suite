@@ -11,6 +11,7 @@ from fastmcp import FastMCP
 
 from seo_mcp.backlinks import get_backlinks, load_signature_from_cache, get_signature_and_overview
 from seo_mcp.keywords import get_keyword_ideas, get_keyword_difficulty
+from seo_mcp.seo_audit import crawl_website
 from seo_mcp.traffic import check_traffic
 
 
@@ -138,6 +139,16 @@ def keyword_difficulty(keyword: str, country: str = "us") -> Optional[Dict[str, 
     if not token:
         raise Exception(f"Failed to get verification token for keyword: {keyword}")
     return get_keyword_difficulty(token, keyword, country)
+
+
+@mcp.tool()
+def seo_audit(url_or_domain: str, max_pages: int = 5, timeout: int = 20) -> Dict[str, Any]:
+    """
+    Run a public on-page SEO audit for a website URL or domain.
+
+    This crawls a small number of internal pages and does not require CapSolver or Ahrefs.
+    """
+    return crawl_website(url_or_domain, max_pages, timeout)
 
 
 def main():

@@ -8,6 +8,8 @@
 
 该服务提供了从 Ahrefs 获取 SEO 数据的 API。它处理整个过程，包括验证码解决、认证和数据检索。结果会被缓存以提高性能并减少 API 成本。
 
+如果你只想对一个公开网站做基础页面 SEO 检查，而不想依赖 Ahrefs 或 CapSolver，可以直接使用项目内置的 `seo_audit` 工具。它默认会抓取少量站内页面。
+
 > 此 MCP 服务仅供学习使用，请勿滥用。本项目受 `@哥飞社群` 启发。
 
 ## 功能特性
@@ -27,6 +29,16 @@
   - 分析热门页面和国家分布
   - 跟踪关键词排名
 
+- 🌐 公共页面 SEO 审计
+
+  - 无需 CapSolver 即可抓取公开网站的少量站内页面
+  - 检查 title、meta description、标题层级、canonical、图片、链接、可索引性和页面评分
+
+- 🧾 SEO 报告导出
+
+  - 从抓取结果生成可分享的 HTML 或 Markdown 报告
+  - 一眼看到评分分布、常见问题、最差页面和下一步建议
+
 - 🚀 性能优化
   - 使用 CapSolver 自动解决验证码
   - 响应缓存
@@ -36,7 +48,7 @@
 ### 前置要求
 
 - Python 3.10 或更高版本
-- CapSolver 账号和 API 密钥（[点此注册](https://dashboard.capsolver.com/passport/register?inviteCode=1dTH7WQSfHD0)）
+- 只有在使用 Ahrefs 相关工具时才需要 CapSolver 账号和 API 密钥（[点此注册](https://dashboard.capsolver.com/passport/register?inviteCode=1dTH7WQSfHD0)）
 
 ### 从 PyPI 安装
 
@@ -72,6 +84,8 @@ uv pip install seo-mcp
    export CAPSOLVER_API_KEY="your-capsolver-api-key"
    ```
 
+  如果你只使用公共 SEO 审计工具，可以跳过这一步。
+
 ## 使用方法
 
 ### 运行服务
@@ -97,6 +111,16 @@ uv pip install seo-mcp
 ```
 
 您也可以在项目根目录创建 `.cursor/mcp.json` 文件，内容同上。
+
+### 导出报告
+
+从公开网站生成可视化 HTML 报告或 Markdown 摘要：
+
+```bash
+seo-report ucv.edu.pe --format html --max-pages 4
+```
+
+默认会把报告保存到 `reports/` 目录。可以用 `--output` 指定文件名，或者用 `--format markdown` 导出 Markdown 版本。
 
 ### API 参考
 
@@ -197,6 +221,37 @@ uv pip install seo-mcp
   "difficulty": 45,
   "serp": [...],
   "related": [...]
+}
+```
+
+#### `seo_audit(url_or_domain: str, max_pages: int = 5, timeout: int = 20)`
+
+对一个公开网站进行基础页面 SEO 检查，并抓取少量站内页面。
+
+**参数：**
+
+- `url_or_domain`（字符串）：要分析的完整 URL 或域名，例如 `https://ucv.edu.pe` 或 `ucv.edu.pe`
+- `max_pages`（整数）：最多抓取的站内页面数，默认 5
+- `timeout`（整数）：请求超时时间，单位秒
+
+**返回：**
+
+```json
+{
+  "start_url": "https://www.ucv.edu.pe/",
+  "max_pages": 5,
+  "pages": [
+    {
+      "final_url": "https://www.ucv.edu.pe/",
+      "score": 85,
+      "title": "UCV | Universidad César Vallejo"
+    }
+  ],
+  "aggregate": {
+    "page_count": 5,
+    "average_score": 88.8,
+    "common_issues": []
+  }
 }
 ```
 

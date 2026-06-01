@@ -26,6 +26,7 @@ dependencies = [
 
 [project.scripts]
 seo-mcp = "seo_mcp.server:main"
+seo-report = "seo_mcp.report:main"
 
 [project.urls]
 "Homepage" = "https://github.com/cnych/seo-mcp"
