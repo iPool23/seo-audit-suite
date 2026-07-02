@@ -10,8 +10,16 @@ export default function Home() {
   const [result, setResult] = useState(null);
   const [logs, setLogs] = useState([]);
   const [checkedTasks, setCheckedTasks] = useState({});
-  
+
+  // --- Unlighthouse state ---
+  const [ulhUrl, setUlhUrl] = useState("");
+  const [ulhLoading, setUlhLoading] = useState(false);
+  const [ulhLogs, setUlhLogs] = useState([]);
+  const [ulhResult, setUlhResult] = useState(null);
+  const [ulhError, setUlhError] = useState("");
+
   const terminalEndRef = useRef(null);
+  const ulhTerminalEndRef = useRef(null);
 
   // Auto-scroll the terminal logs as new ones stream in
   useEffect(() => {
@@ -19,6 +27,13 @@ export default function Home() {
       terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [logs]);
+
+  // Auto-scroll unlighthouse terminal
+  useEffect(() => {
+    if (ulhTerminalEndRef.current) {
+      ulhTerminalEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [ulhLogs]);
 
   // Smooth scroll to the report container once compiled
   useEffect(() => {
@@ -31,6 +46,16 @@ export default function Home() {
       }, 100);
     }
   }, [result, loading]);
+
+  // Scroll to unlighthouse result
+  useEffect(() => {
+    if (ulhResult && !ulhLoading) {
+      setTimeout(() => {
+        const el = document.getElementById("ulh-report-root");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [ulhResult, ulhLoading]);
 
   const handleAudit = async (e) => {
     e.preventDefault();
@@ -93,6 +118,60 @@ export default function Home() {
       setLogs((prev) => [...prev, `[ERROR] ${err.message || "Execution aborted."}`]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // --- Unlighthouse handler ---
+  const handleUnlighthouse = async (e) => {
+    e.preventDefault();
+    if (!ulhUrl) return;
+
+    setUlhLoading(true);
+    setUlhError("");
+    setUlhResult(null);
+    setUlhLogs(["[SYSTEM] Launching Unlighthouse full-site scan..."]);
+
+    let targetUrl = ulhUrl.trim();
+    if (!/^https?:\/\//i.test(targetUrl)) {
+      targetUrl = "https://" + targetUrl;
+    }
+
+    try {
+      const response = await fetch("/api/unlighthouse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: targetUrl }),
+      });
+
+      if (!response.body) throw new Error("ReadableStream not supported.");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("LOG:")) {
+            setUlhLogs((prev) => [...prev, trimmed.substring(4)]);
+          } else if (trimmed.startsWith("RESULT:")) {
+            const parsed = JSON.parse(trimmed.substring(7));
+            setUlhResult(parsed);
+          } else if (trimmed.startsWith("ERROR:")) {
+            throw new Error(trimmed.substring(6));
+          }
+        }
+      }
+    } catch (err) {
+      setUlhError(err.message || "An unexpected error occurred.");
+      setUlhLogs((prev) => [...prev, `[ERROR] ${err.message || "Execution aborted."}`]);
+    } finally {
+      setUlhLoading(false);
     }
   };
 
@@ -1010,6 +1089,219 @@ export default function Home() {
 
         </section>
       )}
+
+      {/* ─────────────────────────────────────────────────────────── */}
+      {/* UNLIGHTHOUSE — Full-Site Scan Panel */}
+      {/* ─────────────────────────────────────────────────────────── */}
+      <section className="ulh-section no-print" style={{ marginTop: "5rem" }}>
+        <div className="ulh-header">
+          <div className="ulh-icon-wrap">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4l3 3" />
+              <path d="M5 3l14 18" strokeOpacity="0.3" />
+            </svg>
+          </div>
+          <div>
+            <h2 style={{ marginBottom: "0.25rem" }}>🔦 Unlighthouse — Full-Site Scan</h2>
+            <p className="muted" style={{ fontSize: "0.875rem" }}>
+              Runs <code style={{ background: "rgba(255,255,255,0.08)", padding: "0 6px", borderRadius: "4px", fontSize: "0.8rem" }}>npx unlighthouse --site &#123;URL&#125;</code> to audit
+              every page of a website with Google Lighthouse in one shot.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleUnlighthouse} className="search-box" style={{ marginTop: "1.5rem" }}>
+          <div className="input-glow-wrap" style={{ flex: 1 }}>
+            <input
+              id="ulh-url-input"
+              type="text"
+              className="url-input"
+              placeholder="Enter site URL (e.g. https://example.com)"
+              value={ulhUrl}
+              onChange={(e) => setUlhUrl(e.target.value)}
+              disabled={ulhLoading}
+              required
+            />
+          </div>
+          <button
+            id="ulh-scan-btn"
+            type="submit"
+            className="btn-unlighthouse"
+            disabled={ulhLoading || !ulhUrl}
+          >
+            {ulhLoading ? (
+              <>
+                <span className="ulh-btn-spinner" />
+                Scanning...
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style={{ marginRight: "0.5rem" }}>
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+                Scan Entire Site
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Unlighthouse error */}
+        {ulhError && (
+          <div className="glass" style={{ padding: "1.5rem", borderColor: "rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.03)", marginTop: "1.5rem" }}>
+            <h2 style={{ color: "hsl(var(--color-fail))", fontSize: "1.1rem" }}>⚠️ Unlighthouse Error</h2>
+            <p style={{ marginTop: "0.5rem", fontSize: "0.9rem" }}>{ulhError}</p>
+          </div>
+        )}
+
+        {/* Unlighthouse live terminal */}
+        {(ulhLoading || ulhLogs.length > 0) && (
+          <div className="glass ulh-terminal-card" style={{ marginTop: "1.5rem" }}>
+            <div className="terminal-header">
+              <div className="terminal-dots">
+                <span className="terminal-dot" />
+                <span className="terminal-dot" />
+                <span className="terminal-dot" />
+              </div>
+              <span>UNLIGHTHOUSE-SCAN-LOGS.SH</span>
+              {ulhLoading && <span className="ulh-live-badge">● LIVE</span>}
+            </div>
+            <div className="terminal-box" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+              {ulhLogs.map((log, idx) => (
+                <div key={idx} className="log-entry">
+                  <span className="log-prefix ulh-prefix">&gt;</span>
+                  <span className="log-text">{log}</span>
+                </div>
+              ))}
+              <div ref={ulhTerminalEndRef} />
+            </div>
+          </div>
+        )}
+
+        {/* Unlighthouse results */}
+        {ulhResult && !ulhLoading && (
+          <div id="ulh-report-root" style={{ marginTop: "2rem", animation: "fadeIn 0.8s ease-in-out" }}>
+
+            {/* Summary header */}
+            <div className="glass ulh-result-header">
+              <div className="ulh-result-site">
+                <span className="muted" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Full-Site Lighthouse Report</span>
+                <div className="domain-badge" style={{ marginTop: "0.5rem" }}>{ulhResult.site}</div>
+              </div>
+              {ulhResult.pages && Array.isArray(ulhResult.pages) && (
+                <div className="ulh-summary-chips">
+                  <div className="ulh-chip">
+                    <span className="ulh-chip-val">{ulhResult.pages.length}</span>
+                    <span className="ulh-chip-label">Pages Scanned</span>
+                  </div>
+                  <div className="ulh-chip ulh-chip-green">
+                    <span className="ulh-chip-val">
+                      {ulhResult.pages.filter(p => {
+                        const s = p?.summary?.performance ?? p?.score ?? 0;
+                        return (typeof s === "number" ? s * 100 : s) >= 85;
+                      }).length}
+                    </span>
+                    <span className="ulh-chip-label">Passing</span>
+                  </div>
+                  <div className="ulh-chip ulh-chip-red">
+                    <span className="ulh-chip-val">
+                      {ulhResult.pages.filter(p => {
+                        const s = p?.summary?.performance ?? p?.score ?? 0;
+                        return (typeof s === "number" ? s * 100 : s) < 60;
+                      }).length}
+                    </span>
+                    <span className="ulh-chip-label">Needs Work</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* No JSON data note */}
+            {(!ulhResult.pages || !Array.isArray(ulhResult.pages)) && (
+              <div className="glass" style={{ padding: "2rem", marginTop: "1.5rem", textAlign: "center" }}>
+                <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🌐</div>
+                <h2 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>Scan Complete</h2>
+                <p className="muted" style={{ fontSize: "0.9rem", maxWidth: "500px", margin: "0 auto" }}>
+                  {ulhResult.note || "Unlighthouse scan finished. Check the output directory or open the Unlighthouse UI at"}
+                  {" "}<a href="http://localhost:5678" target="_blank" rel="noreferrer" style={{ color: "#a5b4fc" }}>http://localhost:5678</a>.
+                </p>
+              </div>
+            )}
+
+            {/* Per-page score grid */}
+            {ulhResult.pages && Array.isArray(ulhResult.pages) && ulhResult.pages.length > 0 && (
+              <div className="ulh-pages-grid" style={{ marginTop: "1.5rem" }}>
+                {ulhResult.pages.map((page, idx) => {
+                  // Unlighthouse JSON report shape varies; handle common structures
+                  const rawUrl = page.url || page.path || "Unknown URL";
+                  const perf = page?.summary?.performance ?? page?.categories?.performance?.score ?? page?.score ?? null;
+                  const seo = page?.summary?.seo ?? page?.categories?.seo?.score ?? null;
+                  const a11y = page?.summary?.accessibility ?? page?.categories?.accessibility?.score ?? null;
+                  const bp = page?.summary?.["best-practices"] ?? page?.categories?.["best-practices"]?.score ?? null;
+
+                  const toPercent = (v) => (v === null || v === undefined ? null : v <= 1 ? Math.round(v * 100) : Math.round(v));
+                  const perfPct = toPercent(perf);
+                  const seoPct  = toPercent(seo);
+                  const a11yPct = toPercent(a11y);
+                  const bpPct   = toPercent(bp);
+
+                  const scoreColor = (s) => {
+                    if (s === null) return "hsl(var(--text-secondary))";
+                    if (s >= 90) return "hsl(var(--color-pass))";
+                    if (s >= 50) return "hsl(var(--color-warn))";
+                    return "hsl(var(--color-fail))";
+                  };
+
+                  const overallScore = perfPct ?? seoPct ?? 0;
+
+                  return (
+                    <div key={idx} className="glass ulh-page-card glass-interactive">
+                      <div className="ulh-page-card-top">
+                        <div className="ulh-page-score-ring" style={{ "--ring-color": scoreColor(overallScore) }}>
+                          <svg viewBox="0 0 60 60" width="60" height="60">
+                            <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
+                            <circle
+                              cx="30" cy="30" r="24"
+                              fill="none"
+                              stroke={scoreColor(overallScore)}
+                              strokeWidth="5"
+                              strokeDasharray={`${(overallScore / 100) * 150.8} 150.8`}
+                              strokeLinecap="round"
+                              transform="rotate(-90 30 30)"
+                            />
+                          </svg>
+                          <span className="ulh-ring-label" style={{ color: scoreColor(overallScore) }}>{overallScore ?? "—"}</span>
+                        </div>
+                        <div className="ulh-page-url" title={rawUrl}>
+                          <a href={rawUrl.startsWith("http") ? rawUrl : ulhResult.site + rawUrl}
+                             target="_blank" rel="noreferrer">
+                            {rawUrl.replace(/^https?:\/\/[^/]+/, "") || "/"}
+                          </a>
+                        </div>
+                      </div>
+                      <div className="ulh-page-metrics">
+                        {[
+                          { label: "Performance", val: perfPct },
+                          { label: "SEO", val: seoPct },
+                          { label: "Accessibility", val: a11yPct },
+                          { label: "Best Practices", val: bpPct },
+                        ].map(({ label, val }) => (
+                          <div key={label} className="ulh-metric">
+                            <span className="ulh-metric-label">{label}</span>
+                            <span className="ulh-metric-val" style={{ color: scoreColor(val) }}>
+                              {val !== null ? val : "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       <footer className="no-print">
         <p>SEO MCP Dashboard &bull; Powered by Google DeepMind Advanced Agentic Coding &bull; 2026</p>

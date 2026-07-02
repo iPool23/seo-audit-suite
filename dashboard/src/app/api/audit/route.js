@@ -27,7 +27,7 @@ except Exception as e:
           url,
           String(pagesLimit)
         ], {
-          cwd: "c:/Users/Equipo/Documents/Projects/MCP/seo-mcp",
+          cwd: "c:/Users/NITRO/Documents/Projects/Python/seo-audit-suite",
           env: { ...process.env, PYTHONPATH: "src", PYTHONIOENCODING: "utf-8" }
         });
 

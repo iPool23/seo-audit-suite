@@ -1102,3 +1102,260 @@ footer {
     border-color: #eee !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────── */
+/* UNLIGHTHOUSE — Full-Site Scan Section Styles               */
+/* ─────────────────────────────────────────────────────────── */
+
+.ulh-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 4rem;
+}
+
+.ulh-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.ulh-icon-wrap {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(6, 182, 212, 0.15));
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2dd4bf;
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+}
+
+/* Teal scan button with glow */
+.btn-unlighthouse {
+  background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+  color: white;
+  padding: 0 1.75rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px 0 rgba(13, 148, 136, 0.35);
+  border: none;
+  min-height: 56px;
+}
+
+.btn-unlighthouse:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px 0 rgba(13, 148, 136, 0.55),
+              0 0 20px 0 rgba(8, 145, 178, 0.25);
+  filter: brightness(1.1);
+}
+
+.btn-unlighthouse:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Spinner inside the scan button */
+.ulh-btn-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin-right: 0.375rem;
+}
+
+/* Live badge in terminal header */
+.ulh-live-badge {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f87171;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* Terminal card wrapper (overrides default glass for header merging) */
+.ulh-terminal-card {
+  overflow: hidden;
+}
+
+/* Cyan prefix colour in Unlighthouse logs */
+.ulh-prefix {
+  color: #2dd4bf !important;
+}
+
+/* Result summary header */
+.ulh-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 2rem 2.5rem;
+  flex-wrap: wrap;
+}
+
+.ulh-result-site {
+  display: flex;
+  flex-direction: column;
+}
+
+.ulh-summary-chips {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ulh-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  min-width: 80px;
+}
+
+.ulh-chip-green {
+  border-color: rgba(20, 184, 166, 0.3);
+  background: rgba(20, 184, 166, 0.05);
+}
+
+.ulh-chip-red {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.ulh-chip-val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.ulh-chip-green .ulh-chip-val {
+  color: hsl(var(--color-pass));
+}
+
+.ulh-chip-red .ulh-chip-val {
+  color: hsl(var(--color-fail));
+}
+
+.ulh-chip-label {
+  font-size: 0.7rem;
+  color: hsl(var(--text-secondary));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.25rem;
+  white-space: nowrap;
+}
+
+/* Per-page cards grid */
+.ulh-pages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.ulh-page-card {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.ulh-page-card-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* SVG ring score gauge */
+.ulh-page-score-ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.ulh-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ulh-page-url {
+  flex: 1;
+  overflow: hidden;
+}
+
+.ulh-page-url a {
+  color: #a5b4fc;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s;
+}
+
+.ulh-page-url a:hover {
+  color: #c7d2fe;
+}
+
+/* Four lighthouse metric chips per card */
+.ulh-page-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.ulh-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.4rem 0.625rem;
+}
+
+.ulh-metric-label {
+  font-size: 0.6875rem;
+  color: hsl(var(--text-secondary));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ulh-metric-val {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
